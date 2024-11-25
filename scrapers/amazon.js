@@ -9,11 +9,21 @@ async function main() {
                 console.log('Connected! Navigating...');
                 const page = await browser.newPage();
                 await page.goto('https://amazon.com',{ timeout: 2 * 60 * 1000 });
-                console.log('Taking screenshot to page.png');
+                await page.fill('#twotabsearchtextbox', "books about mars")
+                await page.click("#nav-search-submit-button")
+                await page.waitForSelector('[data-component-type="s-search-result"]')
+
+                const books = await page.$$('[data-component-type="s-search-result"]')
+
+                for (let i = 0; i < (books.length); i++) {
+                        const titleElement = await books[i].$('h2 a span');
+                        if (titleElement) {
+                            const title = await titleElement.innerText();
+                            console.log(`${i + 1}. ${title}`);
+                        }
+                    }
+
                 await page.screenshot({ path: './page.png', fullPage: true });
-                console.log('Navigated! Scraping page content...');
-                const html = await page.content();
-                console.log(html);
         } finally {
                 await browser.close();
         }
