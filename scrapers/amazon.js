@@ -4,6 +4,7 @@ const SBR_CDP = `wss://${AUTH}@brd.superproxy.io:9222`;
 async function main() {
         console.log('Connecting to Scraping Browser...');
         const browser = await pw.chromium.connectOverCDP(SBR_CDP);
+        // const browser = await pw.chromium.launch({ headless: false })
         try {
                 console.log('Connected! Navigating...');
                 const page = await browser.newPage();
