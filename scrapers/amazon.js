@@ -8,10 +8,11 @@ async function main() {
         try {
                 console.log('Connected! Navigating...');
                 const page = await browser.newPage();
-                await page.goto('https://amazon.com/s?k=books+about+mars',{ timeout: 2 * 60 * 1000 });
+                const booksSearch = '"live on mars" books'
+                await page.goto(`https://amazon.com/s?k=${encodeURIComponent(booksSearch)}`,{ timeout: 2 * 60 * 1000 });
                 await page.waitForSelector('[data-component-type="s-search-result"]')
 
-                await getBooks(page);
+                await paginateResults(page, ()=> getBooks(page))
 
                 await page.screenshot({ path: './page.png', fullPage: true });
         } finally {
@@ -34,4 +35,31 @@ async function getBooks(page){
                         console.log(`${i + 1}. ${title}`);
                 }
         }
+}
+
+async function paginateResults(page, processPage) {
+        let currentPage = 1;
+        let hasNextPage = true;
+    
+        while (hasNextPage) {
+            console.log(`\nScraping page ${currentPage}...`);
+            
+            // Wait for results to load
+            await page.waitForSelector(`[aria-label="Current page, page ${currentPage}"]`);
+    
+            // Execute the callback function for this page
+            await processPage();
+    
+            // Check for next page button
+            const nextButton = await page.$('a.s-pagination-next');
+            if (!nextButton) {
+                console.log('\nReached the last page.');
+                hasNextPage = false;
+            } else {
+                await nextButton.click();
+                currentPage++;
+            }
+        }
+        
+        return currentPage;
 }
