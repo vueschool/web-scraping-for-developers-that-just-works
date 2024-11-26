@@ -8,20 +8,10 @@ async function main() {
         try {
                 console.log('Connected! Navigating...');
                 const page = await browser.newPage();
-                await page.goto('https://amazon.com',{ timeout: 2 * 60 * 1000 });
-                await page.fill('#twotabsearchtextbox', "books about mars")
-                await page.click("#nav-search-submit-button")
+                await page.goto('https://amazon.com/s?k=books+about+mars',{ timeout: 2 * 60 * 1000 });
                 await page.waitForSelector('[data-component-type="s-search-result"]')
 
-                const books = await page.$$('[data-component-type="s-search-result"]')
-
-                for (let i = 0; i < (books.length); i++) {
-                        const titleElement = await books[i].$('h2 a span');
-                        if (titleElement) {
-                            const title = await titleElement.innerText();
-                            console.log(`${i + 1}. ${title}`);
-                        }
-                    }
+                await getBooks(page);
 
                 await page.screenshot({ path: './page.png', fullPage: true });
         } finally {
@@ -33,4 +23,15 @@ if (require.main === module) {
                 console.error(err.stack || err);
                 process.exit(1);
         });
+}
+
+async function getBooks(page){
+        const books = await page.$$('[data-component-type="s-search-result"]')
+        for (let i = 0; i < (books.length); i++) {
+                const titleElement = await books[i].$('h2 a span');
+                if (titleElement) {
+                        const title = await titleElement.innerText();
+                        console.log(`${i + 1}. ${title}`);
+                }
+        }
 }
